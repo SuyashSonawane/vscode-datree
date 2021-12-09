@@ -29,7 +29,7 @@ export class VSViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.onDidReceiveMessage((data) => {
       process.env[K8S_SCHEMA_VERSION] = data.schema;
       process.env[POLICY] = data.policy;
-      vscode.commands.executeCommand("demo.scanFile");
+      vscode.commands.executeCommand("vscode-datree.scanFile");
     });
   }
 

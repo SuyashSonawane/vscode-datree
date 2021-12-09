@@ -1,10 +1,19 @@
 import * as vscode from "vscode";
 import { spawn } from "child_process";
-import { WEB_VIEW_URI } from "../helpers/constants";
 import { getHtmlContent, openSolution } from "../helpers";
+import { lookpath } from "lookpath";
 
-export const handleHelmCommand = (extensionUri: string, filePath: string) => {
-  // vscode.window.showInformationMessage("Helm starting");
+export const handleHelmCommand = async (
+  extensionUri: string,
+  filePath: string
+) => {
+  let path = await lookpath("helm");
+  if (path === undefined) {
+    vscode.window.showErrorMessage(
+      "Cannot find Helm installation, make sure it is added to PATH"
+    );
+    return;
+  }
   let folderPath: any = filePath.split("/");
   folderPath.pop();
   folderPath = folderPath.join("/");
@@ -29,11 +38,18 @@ export const handleHelmCommand = (extensionUri: string, filePath: string) => {
           data.push(chunk);
         });
         child.stdout.on("close", async () => {
-          let json = JSON.parse(Buffer.concat(data).toString());
+          let temp = Buffer.concat(data).toString();
+          if (temp.includes("No files detected")) {
+            vscode.window.showErrorMessage(
+              "Incorrect Helm Chart configuration"
+            );
+            return;
+          }
+          let json = JSON.parse(temp);
           json["K8sSchemaVersion"] = "1.18.0";
           json["ts"] = new Date().toString();
           json["type"] = "HELM";
-          let base64 = new Buffer(JSON.stringify(json)).toString("base64");
+          let base64 = Buffer.from(JSON.stringify(json)).toString("base64");
           let panel = vscode.window.createWebviewPanel(
             "datree-panel",
             "Result",

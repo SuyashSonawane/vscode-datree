@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-import { readFileSync } from "fs";
-import { join } from "path";
 import * as vscode from "vscode";
 import {
   decorateErrors,
@@ -17,16 +14,14 @@ import {
   getYamlErrors,
   openSolution,
 } from "../helpers";
-import { POLICY, WEB_VIEW_URI } from "../helpers/constants";
+import { POLICY } from "../helpers/constants";
 
 export const handleYamlCommand = async (
   extensionUri: string,
-  currentlyOpenTabfilePath: string
+  filePath: string
 ) => {
-  const K8sSchemaVersion: any = await getK8sSchemaVersion(
-    currentlyOpenTabfilePath
-  );
-  if (K8sSchemaVersion === undefined || K8sSchemaVersion === "") {
+  const k8sSchemaVersion: any = await getK8sSchemaVersion(filePath);
+  if (k8sSchemaVersion === undefined || k8sSchemaVersion === "") {
     vscode.window.showErrorMessage("Improper K8s version");
     return;
   }
@@ -35,15 +30,34 @@ export const handleYamlCommand = async (
     {
       location: vscode.ProgressLocation.Window,
       // cancellable: false,
-      title: `Running analysis (${K8sSchemaVersion}) (${policy})`,
+      title: `Running analysis (${k8sSchemaVersion}) (${policy})`,
     },
     async (task) => {
       task.report({ increment: 0 });
       try {
         const [datreeOutput, datreeOutputBase64]: any = await getDatreeOutput(
-          currentlyOpenTabfilePath,
-          K8sSchemaVersion
+          filePath,
+          k8sSchemaVersion
         );
+
+        if (datreeOutput.InvalidYamlFiles) {
+          let yamlErrors = getYamlErrors(datreeOutput.InvalidYamlFiles[0]);
+          yamlErrors.forEach((err) => {
+            decorateYamlError(err);
+          });
+          return;
+        }
+        task.report({ increment: 10 });
+        if (datreeOutput.InvalidK8sFiles) {
+          let k8sErrors = getK8sErrors(
+            datreeOutput.InvalidK8sFiles[0],
+            k8sSchemaVersion
+          );
+          k8sErrors.forEach((err) => {
+            decorateK8sError(err);
+          });
+          return;
+        }
         let panel = vscode.window.createWebviewPanel(
           "datree-panel",
           "Result",
@@ -58,28 +72,7 @@ export const handleYamlCommand = async (
         });
         panel.webview.html = await getHtmlContent(extensionUri);
         panel.webview.postMessage(datreeOutputBase64);
-
-        if (datreeOutput.InvalidYamlFiles) {
-          let yamlErrors = getYamlErrors(datreeOutput.InvalidYamlFiles[0]);
-          yamlErrors.forEach((err) => {
-            decorateYamlError(err);
-          });
-          return;
-        }
-        task.report({ increment: 10 });
-        if (datreeOutput.InvalidK8sFiles) {
-          let k8sErrors = getK8sErrors(
-            datreeOutput.InvalidK8sFiles[0],
-            K8sSchemaVersion
-          );
-          k8sErrors.forEach((err) => {
-            decorateK8sError(err);
-          });
-          return;
-        }
-        const yamlContent: any = await getYamlAsFlattenedJSON(
-          currentlyOpenTabfilePath
-        );
+        const yamlContent: any = await getYamlAsFlattenedJSON(filePath);
         task.report({ increment: 30 });
         const errors = getPolicyErrors(datreeOutput);
         if (errors?.length === 0) {

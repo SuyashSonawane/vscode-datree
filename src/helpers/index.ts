@@ -69,7 +69,7 @@ export const getK8sSchemaVersion = async (filePath: string) => {
   });
 };
 
-export const getDatreeOutput = (filePath: string, K8sSchemaVersion: string) => {
+export const getDatreeOutput = (filePath: string, k8sSchemaVersion: string) => {
   return new Promise((resolve, reject) => {
     let policy = process.env[POLICY];
     const child =
@@ -80,7 +80,7 @@ export const getDatreeOutput = (filePath: string, K8sSchemaVersion: string) => {
             "--output",
             "json",
             "--schema-version",
-            K8sSchemaVersion,
+            k8sSchemaVersion,
             "--policy",
             policy,
           ])
@@ -90,7 +90,7 @@ export const getDatreeOutput = (filePath: string, K8sSchemaVersion: string) => {
             "--output",
             "json",
             "--schema-version",
-            K8sSchemaVersion,
+            k8sSchemaVersion,
           ]);
     let data: any = [];
     child.stdout.on("data", (chunk: any) => {
@@ -98,23 +98,22 @@ export const getDatreeOutput = (filePath: string, K8sSchemaVersion: string) => {
     });
     child.stdout.on("close", () => {
       let temp = Buffer.concat(data).toString();
-      if (temp.includes("Login to create a new policy")) {
+      if (policy && temp.includes(policy)) {
         reject(temp.trim());
         return;
       }
       let json = JSON.parse(temp);
-      json["K8sSchemaVersion"] = K8sSchemaVersion;
+      json["K8sSchemaVersion"] = k8sSchemaVersion;
       json["ts"] = new Date().toString();
       json["type"] = "YAML";
       json["policy"] = process.env[POLICY];
       json[CONFIG_PATH] = process.env[CONFIG_PATH];
-      let base64 = new Buffer(JSON.stringify(json)).toString("base64");
+      let base64 = Buffer.from(JSON.stringify(json)).toString("base64");
       resolve([json, base64]);
     });
-    child.stderr.on("data", console.log);
 
     child.on("close", (code: any) => {
-      // console.log(`child process exited with code ${code}`);
+      console.log(`child process exited with code ${code}`);
     });
   });
 };
@@ -258,11 +257,11 @@ export const decorateYamlError = (err: { lineNo: number; message: string }) => {
   }
 };
 
-export const getK8sErrors = (invalidK8sFile: any, K8sSchemaVersion: string) => {
+export const getK8sErrors = (invalidK8sFile: any, k8sSchemaVersion: string) => {
   let validationErrors = invalidK8sFile.ValidationErrors;
   let errors: string[] = [];
   validationErrors.forEach((err: any) => {
-    errors.push(`K8s schema (${K8sSchemaVersion}) error: ${err.ErrorMessage}`);
+    errors.push(`K8s schema (${k8sSchemaVersion}) error: ${err.ErrorMessage}`);
   });
   return errors;
 };
