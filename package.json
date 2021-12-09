@@ -10,10 +10,31 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onView:demo.sidebar"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vscode-datree-view",
+          "title": "VSCode Datree",
+          "icon": "media/logo.png"
+        }
+      ]
+    },
+    "views": {
+      "vscode-datree-view":[
+        {
+          "type": "webview",
+          "id": "vscode-datree-sidebar",
+          "name": "VSCode Datree",
+          "icon": "media/logo.png",
+          "contextualTitle": "VSCode Datree"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "demo.helloWorld",

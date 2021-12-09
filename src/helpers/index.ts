@@ -1,26 +1,120 @@
+import { readFileSync } from "fs";
 import * as vscode from "vscode";
-/* eslint-disable @typescript-eslint/naming-convention */
+import { homedir } from "os";
+import { join } from "path";
+import {
+  CONFIG_PATH,
+  DEFAULT_SCHEMA_VERSION,
+  K8S_SCHEMA_VERSION,
+  POLICY,
+} from "./constants";
 const { spawn } = require("child_process");
 const yaml = require("js-yaml");
 const fs = require("fs");
 const flatten = require("flat");
 
-export const getDatreeOutput = (filePath: string) => {
+export const getUserToken = async () => {
+  const doc = await yaml.load(
+    fs.readFileSync(join(homedir(), ".datree/config.yaml"), "utf8")
+  );
+  console.log(doc);
+  return doc.token;
+};
+
+export const loadConfig = async () => {
+  return new Promise(async (resolve, reject) => {
+    const files = await vscode.workspace.findFiles("**/**.datree");
+    delete process.env[POLICY];
+    delete process.env[K8S_SCHEMA_VERSION];
+    if (files.length) {
+      process.env[CONFIG_PATH] = files[0].path;
+      let fileContent = readFileSync(files[0].fsPath).toString();
+      fileContent.split("\n").forEach((line) => {
+        let [label, value] = line.split("=");
+        process.env[label.trim()] = value.trim();
+      });
+    }
+    resolve(true);
+  });
+};
+
+export const getK8sSchemaVersion = async (filePath: string) => {
   return new Promise((resolve, reject) => {
-    const child = spawn("datree", ["test", filePath, "--output", "json"]);
+    if (process.env[K8S_SCHEMA_VERSION]) {
+      resolve(process.env[K8S_SCHEMA_VERSION]);
+      return;
+    }
+    const child = spawn("head", ["-1", filePath]);
+    let data: any[] = [];
+    child.stdout.on("data", (chunk: any) => {
+      data.push(chunk);
+    });
+    child.stdout.on("close", () => {
+      let content = Buffer.concat(data).toString();
+      if (content.startsWith("#")) {
+        let version = content.split(":")[1].trim();
+        resolve(version);
+      } else {
+        vscode.window
+          .showInputBox({
+            value: DEFAULT_SCHEMA_VERSION,
+            prompt: "Enter K8s Schema Version",
+            title: "Enter K8s Schema Version",
+          })
+          .then((value) => {
+            resolve(value);
+          });
+      }
+    });
+  });
+};
+
+export const getDatreeOutput = (filePath: string, K8sSchemaVersion: string) => {
+  return new Promise((resolve, reject) => {
+    let policy = process.env[POLICY];
+    const child =
+      policy !== "default"
+        ? spawn("datree", [
+            "test",
+            filePath,
+            "--output",
+            "json",
+            "--schema-version",
+            K8sSchemaVersion,
+            "--policy",
+            policy,
+          ])
+        : spawn("datree", [
+            "test",
+            filePath,
+            "--output",
+            "json",
+            "--schema-version",
+            K8sSchemaVersion,
+          ]);
     let data: any = [];
     child.stdout.on("data", (chunk: any) => {
       data.push(chunk);
     });
     child.stdout.on("close", () => {
-      let json = JSON.parse(Buffer.concat(data).toString());
-      let base64 = Buffer.concat(data).toString("base64");
+      let temp = Buffer.concat(data).toString();
+      if (temp.includes("Login to create a new policy")) {
+        reject(temp.trim());
+        return;
+      }
+      let json = JSON.parse(temp);
+      json["K8sSchemaVersion"] = K8sSchemaVersion;
+      json["ts"] = new Date().toString();
+      json["type"] = "YAML";
+      json["policy"] = process.env[POLICY];
+      json[CONFIG_PATH] = process.env[CONFIG_PATH];
+      let base64 = new Buffer(JSON.stringify(json)).toString("base64");
       resolve([json, base64]);
     });
     child.stderr.on("data", console.log);
 
     child.on("close", (code: any) => {
-      console.log(`child process exited with code ${code}`);
+      // console.log(`child process exited with code ${code}`);
     });
   });
 };
@@ -54,14 +148,17 @@ export const getPolicyErrors = (datreeOutput: any) => {
   });
   return errors;
 };
+
 export const decorateErrors = (key: any, type: "parent" | "error") => {
   const decorationType =
     type === "parent"
       ? vscode.window.createTextEditorDecorationType({
           backgroundColor: "yellow",
+          overviewRulerColor: "yellow",
         })
       : vscode.window.createTextEditorDecorationType({
           textDecoration: "underline",
+          overviewRulerColor: "yellow",
           fontWeight: "bold",
         });
   const regEx = new RegExp(key[0], "g");
@@ -137,9 +234,10 @@ export const getYamlErrors = (invalidYamlFile: any) => {
 };
 
 export const decorateYamlError = (err: { lineNo: number; message: string }) => {
-  let errorPosition = new vscode.Position(err.lineNo, 0);
+  let errorPosition = new vscode.Position(err.lineNo - 1, 0);
   const decorationType = vscode.window.createTextEditorDecorationType({
     backgroundColor: "red",
+    overviewRulerColor: "red",
   });
   const wordRange =
     vscode.window.activeTextEditor?.document.getWordRangeAtPosition(
@@ -160,11 +258,11 @@ export const decorateYamlError = (err: { lineNo: number; message: string }) => {
   }
 };
 
-export const getK8sErrors = (invalidK8sFile: any) => {
+export const getK8sErrors = (invalidK8sFile: any, K8sSchemaVersion: string) => {
   let validationErrors = invalidK8sFile.ValidationErrors;
   let errors: string[] = [];
   validationErrors.forEach((err: any) => {
-    errors.push(err.ErrorMessage);
+    errors.push(`K8s schema (${K8sSchemaVersion}) error: ${err.ErrorMessage}`);
   });
   return errors;
 };
@@ -174,6 +272,7 @@ export const decorateK8sError = (err: string) => {
     vscode.window.createTextEditorDecorationType({
       textDecoration: "underline",
       color: "red",
+      overviewRulerColor: "red",
     });
   const text = vscode.window.activeTextEditor?.document.getText();
   let activeEditor = vscode.window.activeTextEditor;
@@ -186,7 +285,7 @@ export const decorateK8sError = (err: string) => {
   if (wordRange) {
     const decoration: vscode.DecorationOptions = {
       range: wordRange,
-      hoverMessage: "K8s schema error: " + err,
+      hoverMessage: err,
     };
     vscode.window.activeTextEditor?.setDecorations(decorationType, [
       decoration,
