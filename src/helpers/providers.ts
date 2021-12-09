@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { getUserToken } from ".";
+import { getDatreeVersion, getUserToken } from ".";
 import { K8S_SCHEMA_VERSION, POLICY } from "./constants";
 
 export class VSViewProvider implements vscode.WebviewViewProvider {
@@ -7,7 +7,7 @@ export class VSViewProvider implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(private readonly _extensionUri: vscode.Uri) { }
 
   public async resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -57,6 +57,9 @@ export class VSViewProvider implements vscode.WebviewViewProvider {
 
     const nonce = getNonce();
     const token = await getUserToken();
+
+    const datreeVersion = await getDatreeVersion();
+
     return `<!DOCTYPE html>
     <html lang="en">
     <head>
@@ -68,7 +71,9 @@ export class VSViewProvider implements vscode.WebviewViewProvider {
         <link rel="stylesheet" href="${styleVSCodeUri}">
     </head>
     <body>
-        <img src="${logoUri}"/>
+        <img src="${logoUri}" width="300px"/>
+        <br/>
+        Datree version : ${datreeVersion}
         <form>
           <p>K8s Schema Version</p>
           <input type="text" placeholder="1.18.0" value="1.18.0" name="schema" id="schema" required>
@@ -79,6 +84,9 @@ export class VSViewProvider implements vscode.WebviewViewProvider {
           <br/>
           Dashboard URL: 
           <a href="https://app.datree.io/login?cliId=${token}">https://app.datree.io/login?cliId=${token}</a>
+          <br/>
+          <br/>
+          <br/>
         </form>
         <script nonce="${nonce}" src="${scriptUri}"></script>
     </body>

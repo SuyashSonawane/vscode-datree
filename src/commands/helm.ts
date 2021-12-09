@@ -71,7 +71,7 @@ export const handleHelmCommand = async (
         });
         child.stderr.on("close", () => {
           console.log(Buffer.concat(err).toString());
-          reject(false);
+          err.length && reject(false);
         });
       });
     }

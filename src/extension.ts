@@ -3,9 +3,10 @@ import { handleHelmCommand } from "./commands/helm";
 import { handleYamlCommand } from "./commands/yaml";
 import { VSViewProvider } from "./helpers/providers";
 import { lookpath } from "lookpath";
+import path = require('path');
 export async function activate(context: vscode.ExtensionContext) {
-  let path = await lookpath("datree");
-  if (path === undefined) {
+  let datreePath = await lookpath("datree");
+  if (datreePath === undefined) {
     vscode.window.showErrorMessage(
       "Cannot find datree installation, make sure it is added to PATH"
     );
@@ -24,6 +25,9 @@ export async function activate(context: vscode.ExtensionContext) {
       if (!filePath) {
         return;
       }
+
+      // convert windows path to posix path
+      filePath = filePath.split(path.sep).join(path.posix.sep);
       // only run tests for *.yaml files
       if (!filePath.includes(".yaml")) {
         vscode.window.showErrorMessage("Not an YAML configuration file");
@@ -42,4 +46,4 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

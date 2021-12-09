@@ -21,6 +21,21 @@ export const getUserToken = async () => {
   return doc.token;
 };
 
+export const getDatreeVersion = async () => {
+  return new Promise((resolve, reject) => {
+    const child = spawn("datree", ["version"]);
+    let data: any[] = [];
+    child.stdout.on("data", (chunk: any) => {
+      data.push(chunk);
+    });
+    child.stdout.on("close", () => {
+      let version = Buffer.concat(data).toString();
+      resolve(version.trim());
+    });
+  });
+};
+
+
 export const loadConfig = async () => {
   return new Promise(async (resolve, reject) => {
     const files = await vscode.workspace.findFiles("**/**.datree");
@@ -75,23 +90,23 @@ export const getDatreeOutput = (filePath: string, k8sSchemaVersion: string) => {
     const child =
       policy !== "default"
         ? spawn("datree", [
-            "test",
-            filePath,
-            "--output",
-            "json",
-            "--schema-version",
-            k8sSchemaVersion,
-            "--policy",
-            policy,
-          ])
+          "test",
+          filePath,
+          "--output",
+          "json",
+          "--schema-version",
+          k8sSchemaVersion,
+          "--policy",
+          policy,
+        ])
         : spawn("datree", [
-            "test",
-            filePath,
-            "--output",
-            "json",
-            "--schema-version",
-            k8sSchemaVersion,
-          ]);
+          "test",
+          filePath,
+          "--output",
+          "json",
+          "--schema-version",
+          k8sSchemaVersion,
+        ]);
     let data: any = [];
     child.stdout.on("data", (chunk: any) => {
       data.push(chunk);
@@ -152,14 +167,14 @@ export const decorateErrors = (key: any, type: "parent" | "error") => {
   const decorationType =
     type === "parent"
       ? vscode.window.createTextEditorDecorationType({
-          backgroundColor: "yellow",
-          overviewRulerColor: "yellow",
-        })
+        backgroundColor: "yellow",
+        overviewRulerColor: "yellow",
+      })
       : vscode.window.createTextEditorDecorationType({
-          textDecoration: "underline",
-          overviewRulerColor: "yellow",
-          fontWeight: "bold",
-        });
+        textDecoration: "underline",
+        overviewRulerColor: "yellow",
+        fontWeight: "bold",
+      });
   const regEx = new RegExp(key[0], "g");
   const text = vscode.window.activeTextEditor?.document.getText();
   let match;
