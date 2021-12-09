@@ -5,3 +5,6 @@ Initial release of extension
 
 ### 0.0.2
 Added solution links
+
+### 0.1.0
+Added windows support 
