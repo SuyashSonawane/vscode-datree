@@ -8,6 +8,7 @@ import {
   K8S_SCHEMA_VERSION,
   POLICY,
 } from "./constants";
+import { defaultRules } from "../data/rules";
 const { spawn } = require("child_process");
 const yaml = require("js-yaml");
 const fs = require("fs");
@@ -17,7 +18,6 @@ export const getUserToken = async () => {
   const doc = await yaml.load(
     fs.readFileSync(join(homedir(), ".datree/config.yaml"), "utf8")
   );
-  console.log(doc);
   return doc.token;
 };
 
@@ -293,5 +293,20 @@ export const decorateK8sError = (err: string) => {
     vscode.workspace.onDidChangeTextDocument(() => {
       vscode.window.activeTextEditor?.setDecorations(decorationType, []);
     });
+  }
+};
+
+export const getHtmlContent = async (extensionUri: string) => {
+  let data = readFileSync(join(extensionUri, "media", "index.html")).toString();
+  return data;
+};
+
+export const openSolution = async (suggestion: string) => {
+  let rules = defaultRules.policies[0].rules;
+  for (let rule of rules) {
+    if (rule.messageOnFailure === suggestion) {
+      vscode.commands.executeCommand("vscode.open", vscode.Uri.parse(rule.url));
+      return;
+    }
   }
 };

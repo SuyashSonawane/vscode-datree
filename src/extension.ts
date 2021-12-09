@@ -8,7 +8,6 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(VSViewProvider.viewType, provider)
   );
-
   let scanFile = vscode.commands.registerCommand("demo.scanFile", async () => {
     let currentlyOpenTabfilePath: any =
       vscode.window.activeTextEditor?.document.fileName;
@@ -20,9 +19,9 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
     if (currentlyOpenTabfilePath.split("/").slice(-1)[0] === "Chart.yaml") {
-      await handleHelmCommand(currentlyOpenTabfilePath);
+      await handleHelmCommand(context.extensionPath, currentlyOpenTabfilePath);
     } else {
-      await handleYamlCommand(currentlyOpenTabfilePath);
+      await handleYamlCommand(context.extensionPath, currentlyOpenTabfilePath);
     }
   });
 

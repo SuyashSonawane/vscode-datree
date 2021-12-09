@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+import { readFileSync } from "fs";
+import { join } from "path";
 import * as vscode from "vscode";
 import {
   decorateErrors,
@@ -6,16 +9,20 @@ import {
   generateErrorKeys,
   generateErrorParentKeys,
   getDatreeOutput,
+  getHtmlContent,
   getK8sErrors,
   getK8sSchemaVersion,
   getPolicyErrors,
   getYamlAsFlattenedJSON,
   getYamlErrors,
+  openSolution,
 } from "../helpers";
 import { POLICY, WEB_VIEW_URI } from "../helpers/constants";
 
-export const handleYamlCommand = async (currentlyOpenTabfilePath: string) => {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
+export const handleYamlCommand = async (
+  extensionUri: string,
+  currentlyOpenTabfilePath: string
+) => {
   const K8sSchemaVersion: any = await getK8sSchemaVersion(
     currentlyOpenTabfilePath
   );
@@ -43,7 +50,15 @@ export const handleYamlCommand = async (currentlyOpenTabfilePath: string) => {
           vscode.ViewColumn.Beside,
           { enableScripts: true }
         );
-        panel.webview.html = `<iframe style="border:none;width:100%;height:100vh;" src="${WEB_VIEW_URI}#${datreeOutputBase64}"></iframe>`;
+        panel.webview.onDidReceiveMessage((message) => {
+          openSolution(message);
+        });
+        panel.onDidChangeViewState((e) => {
+          panel.webview.postMessage(datreeOutputBase64);
+        });
+        panel.webview.html = await getHtmlContent(extensionUri);
+        panel.webview.postMessage(datreeOutputBase64);
+
         if (datreeOutput.InvalidYamlFiles) {
           let yamlErrors = getYamlErrors(datreeOutput.InvalidYamlFiles[0]);
           yamlErrors.forEach((err) => {
