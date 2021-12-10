@@ -49,7 +49,6 @@ export const handleHelmCommand = async (
           json["K8sSchemaVersion"] = "1.18.0";
           json["ts"] = new Date().toString();
           json["type"] = "HELM";
-          let base64 = Buffer.from(JSON.stringify(json)).toString("base64");
           let panel = vscode.window.createWebviewPanel(
             "datree-panel",
             "Result",
@@ -60,10 +59,10 @@ export const handleHelmCommand = async (
             openSolution(message);
           });
           panel.onDidChangeViewState((e) => {
-            panel.webview.postMessage(base64);
+            panel.webview.postMessage(json);
           });
           panel.webview.html = await getHtmlContent(extensionUri);
-          panel.webview.postMessage(base64);
+          panel.webview.postMessage(json);
           resolve(true);
         });
         child.stderr.on("data", (chunk) => {

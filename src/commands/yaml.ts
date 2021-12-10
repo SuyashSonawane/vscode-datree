@@ -68,10 +68,10 @@ export const handleYamlCommand = async (
           openSolution(message);
         });
         panel.onDidChangeViewState((e) => {
-          panel.webview.postMessage(datreeOutputBase64);
+          panel.webview.postMessage(datreeOutput);
         });
         panel.webview.html = await getHtmlContent(extensionUri);
-        panel.webview.postMessage(datreeOutputBase64);
+        panel.webview.postMessage(datreeOutput);
         const yamlContent: any = await getYamlAsFlattenedJSON(filePath);
         task.report({ increment: 30 });
         const errors = getPolicyErrors(datreeOutput);
