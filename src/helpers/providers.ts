@@ -74,6 +74,7 @@ export class VSViewProvider implements vscode.WebviewViewProvider {
         <img src="${logoUri}" width="300px"/>
         <br/>
         Datree version : ${datreeVersion}
+        <p id="type"></p>
         <form>
           <p>K8s Schema Version</p>
           <input type="text" placeholder="1.18.0" value="1.18.0" name="schema" id="schema" required>
@@ -87,6 +88,8 @@ export class VSViewProvider implements vscode.WebviewViewProvider {
           <br/>
           <br/>
           <br/>
+          Recent Executions : <br/>
+          <div id="command"></div>
         </form>
         <script nonce="${nonce}" src="${scriptUri}"></script>
     </body>

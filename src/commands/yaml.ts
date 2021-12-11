@@ -15,6 +15,7 @@ import {
   openSolution,
 } from "../helpers";
 import { POLICY } from "../helpers/constants";
+import { VSViewProvider } from "../helpers/providers";
 
 export const handleYamlCommand = async (
   extensionUri: string,
