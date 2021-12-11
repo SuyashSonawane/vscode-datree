@@ -240,7 +240,7 @@ export const getYamlErrors = (invalidYamlFile: any) => {
   let errors: { lineNo: number; message: string }[] = [];
   validationErrors.forEach((err: any) => {
     let temp = err.ErrorMessage.split(":");
-    let lineNo = parseInt(temp[1].trim().replaceAll(/[^\d.]/g, ""));
+    let lineNo = parseInt(temp[1].trim().replace(/[^\d.]/g, ""));
     let message = temp[2].trim();
     errors.push({ lineNo, message });
   });
