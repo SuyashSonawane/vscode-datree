@@ -4,7 +4,7 @@ import { handleYamlCommand } from "./commands/yaml";
 import { VSViewProvider } from "./helpers/providers";
 import { lookpath } from "lookpath";
 import path = require('path');
-import { K8S_SCHEMA_VERSION, POLICY } from "./helpers/constants";
+import { IGNORE_MISSING_SCHEMAS, K8S_SCHEMA_VERSION, POLICY } from "./helpers/constants";
 export async function activate(context: vscode.ExtensionContext) {
   let datreePath = await lookpath("datree");
   if (datreePath === undefined) {
@@ -41,7 +41,16 @@ export async function activate(context: vscode.ExtensionContext) {
         await handleHelmCommand(context.extensionPath, filePath);
       } else {
         provider.postMessage({ type: 'fileType', message: 'YAML' });
-        provider.postMessage({ type: 'command', message: `datree test ${filePath} --schema-version ${process.env[K8S_SCHEMA_VERSION]} ${process.env[POLICY] !== 'default' ? '--policy ' + process.env[POLICY] : ''}` });
+        let args = ['datree', 'test', filePath, '--output', 'json', "--schema-version",
+          process.env[K8S_SCHEMA_VERSION]];
+
+        let policy: any = process.env[POLICY];
+        let ignoreMissingSchema: any = process.env[IGNORE_MISSING_SCHEMAS];
+
+        policy !== "default" && args.push(...['--policy', policy]);
+        ignoreMissingSchema !== 'false' && args.push('--ignore-missing-schemas');
+
+        provider.postMessage({ type: 'command', message: args.join(' ') });
 
         await handleYamlCommand(context.extensionPath, filePath);
       }

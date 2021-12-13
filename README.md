@@ -36,14 +36,12 @@ _Requires helm plugin installed, can be installed from [datree helm plugin](http
 # Release Notes
 
 ### 0.0.1
-
-Initial release of extension 🚀
+- Initial release of extension 🚀
 
 ### 0.1.0
-Windows platform is now supported 💯 
-
-#### 0.1.1
-Icon update and Holiday theme 🎉
+- Windows platform is now supported 💯 
+- Icon update and Holiday theme 🎉
+- Option to ignore missing schema
 # Acknowledgement
 
 <img src="media/datree-logo.png" width="300px"> <br/>

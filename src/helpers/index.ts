@@ -5,6 +5,7 @@ import { join } from "path";
 import {
   CONFIG_PATH,
   DEFAULT_SCHEMA_VERSION,
+  IGNORE_MISSING_SCHEMAS,
   K8S_SCHEMA_VERSION,
   POLICY,
 } from "./constants";
@@ -86,31 +87,22 @@ export const getK8sSchemaVersion = async (filePath: string) => {
 
 export const getDatreeOutput = (filePath: string, k8sSchemaVersion: string) => {
   return new Promise((resolve, reject) => {
-    let policy = process.env[POLICY];
-    const child =
-      policy !== "default"
-        ? spawn("datree", [
-          "test",
-          filePath,
-          "--output",
-          "json",
-          "--schema-version",
-          k8sSchemaVersion,
-          "--policy",
-          policy,
-        ])
-        : spawn("datree", [
-          "test",
-          filePath,
-          "--output",
-          "json",
-          "--schema-version",
-          k8sSchemaVersion,
-        ]);
+
+    let policy: any = process.env[POLICY];
+    let ignoreMissingSchema: any = process.env[IGNORE_MISSING_SCHEMAS];
+
+    let args = ['test', filePath, '--output', 'json', "--schema-version",
+      k8sSchemaVersion];
+
+    policy !== "default" && args.push(...['--policy', policy]);
+    ignoreMissingSchema !== 'false' && args.push('--ignore-missing-schemas');
+
+    const child = spawn('datree', args);
     let data: any = [];
     child.stdout.on("data", (chunk: any) => {
       data.push(chunk);
     });
+
     child.stdout.on("close", () => {
       let temp = Buffer.concat(data).toString();
       if (policy && temp.includes(policy)) {

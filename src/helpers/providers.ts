@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { getDatreeVersion, getUserToken } from ".";
-import { K8S_SCHEMA_VERSION, POLICY } from "./constants";
+import { IGNORE_MISSING_SCHEMAS, K8S_SCHEMA_VERSION, POLICY } from "./constants";
 
 export class VSViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "vscode-datree-sidebar";
@@ -29,6 +29,7 @@ export class VSViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.onDidReceiveMessage((data) => {
       process.env[K8S_SCHEMA_VERSION] = data.schema;
       process.env[POLICY] = data.policy;
+      process.env[IGNORE_MISSING_SCHEMAS] = data.ignoreMissingSchema;
       vscode.commands.executeCommand("vscode-datree.scanFile");
     });
   }
@@ -80,6 +81,7 @@ export class VSViewProvider implements vscode.WebviewViewProvider {
           <input type="text" placeholder="1.18.0" value="1.18.0" name="schema" id="schema" required>
           <p>Policy</p>
           <input type="text" placeholder="default" value="default" name="policy" id="policy" required>
+          <input type="checkbox" id="ignore-missing-schema" name="ignore"/> Ignore Missing Schema
           <button type="submit" id="submit-btn">Run Analysis</button>
           <br/>
           <br/>
