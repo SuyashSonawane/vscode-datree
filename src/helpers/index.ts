@@ -16,10 +16,13 @@ const fs = require("fs");
 const flatten = require("flat");
 
 export const getUserToken = async () => {
-  const doc = await yaml.load(
-    fs.readFileSync(join(homedir(), ".datree/config.yaml"), "utf8")
-  );
-  return doc.token;
+  let path = join(homedir(), ".datree/config.yaml");
+  if (fs.existsSync(path)) {
+    const doc = await yaml.load(
+      fs.readFileSync(path), "utf8")
+    return doc.token;
+  }
+  return null
 };
 
 export const getDatreeVersion = async () => {

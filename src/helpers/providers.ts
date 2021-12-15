@@ -42,26 +42,28 @@ export class VSViewProvider implements vscode.WebviewViewProvider {
   }
 
   private async _getHtmlForWebview(webview: vscode.Webview) {
-    const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "media", "main.js")
-    );
+    try {
 
-    const styleResetUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "media", "reset.css")
-    );
-    const styleVSCodeUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "media", "vscode.css")
-    );
-    const logoUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this._extensionUri, "media", "datree-logo.png")
-    );
+      const scriptUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(this._extensionUri, "media", "main.js")
+      );
 
-    const nonce = getNonce();
-    const token = await getUserToken();
+      const styleResetUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(this._extensionUri, "media", "reset.css")
+      );
+      const styleVSCodeUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(this._extensionUri, "media", "vscode.css")
+      );
+      const logoUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(this._extensionUri, "media", "datree-logo.png")
+      );
 
-    const datreeVersion = await getDatreeVersion();
+      const nonce = getNonce();
+      const token = await getUserToken();
 
-    return `<!DOCTYPE html>
+      const datreeVersion = await getDatreeVersion();
+
+      return `<!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -86,7 +88,7 @@ export class VSViewProvider implements vscode.WebviewViewProvider {
           <br/>
           <br/>
           Dashboard URL: 
-          <a href="https://app.datree.io/login?cliId=${token}">https://app.datree.io/login?cliId=${token}</a>
+          ${token ? `<a href="https://app.datree.io/login?cliId=${token}">https://app.datree.io/login?cliId=${token}</a>` : '<i>Cannot fetch user token, please run datree test atleast once to generate token.</i>'}
           <br/>
           <br/>
           <br/>
@@ -96,6 +98,10 @@ export class VSViewProvider implements vscode.WebviewViewProvider {
         <script nonce="${nonce}" src="${scriptUri}"></script>
     </body>
     </html>`;
+    }
+    catch (e) {
+      return `Error occurred ${e}`
+    }
   }
 }
 
