@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Visual Studio Marketplace](https://vsmarketplacebadge.apphb.com/installs-short/suyashsonawane.vscode-datree.svg?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=suyashsonawane.vscode-datree)
-[![Tested with Datree version 0.14.62](https://img.shields.io/badge/Datree-0.14.62-green)](https://www.datree.io/)
+[![Tested with Datree version 0.15.0](https://img.shields.io/badge/Datree-0.15.0-green)](https://www.datree.io/)
 
 
 Simple VSCode Extension that allows you to run **Datree** tests on Kubernetes configurations.
@@ -35,13 +35,15 @@ _Requires helm plugin installed, can be installed from [datree helm plugin](http
 
 # Release Notes
 
-### 0.0.1
-- Initial release of extension 🚀
-
+### 0.2.0
+- Support for new improved datree-cli (v0.15.0)
 ### 0.1.0
 - Windows platform is now supported 💯 
 - Icon update and Holiday theme 🎉
 - Option to ignore missing schema
+### 0.0.1
+- Initial release of extension 🚀
+
 # Acknowledgement
 
 <img src="media/datree-logo.png" width="300px"> <br/>

@@ -31,20 +31,21 @@ function App() {
   }, [data])
 
   useEffect(() => {
-    if (data && !yamlFileErrors && !k8sFileErrors && data.EvaluationResults.Summary.TotalPassedCount !== 1) {
-      setFileMapper(Object.entries(data.EvaluationResults.FileNameRuleMapper)[0])
+    if (data && !yamlFileErrors && !k8sFileErrors && data.policySummary.totalPassedCount !== 1) {
+      setFileMapper(Object.entries(data.policyValidationResults)[0][1].ruleResults)
     }
   }, [data, k8sFileErrors, yamlFileErrors])
 
   useEffect(() => {
-    fileMapper && setPolicyErrors(Object.entries(fileMapper[1]))
+    console.log(fileMapper)
+    fileMapper && setPolicyErrors(fileMapper)
   }, [fileMapper])
 
   return (
     data ?
       <>
-        <h1>Evaluation Results {data.EvaluationSummary.PassedPolicyCheckCount === 0 ? "🔴" : "🟢"}</h1>
-        {data.EvaluationSummary.PassedPolicyCheckCount > 0 &&
+        <h1>Evaluation Results {data.policySummary.totalPassedCount === 0 ? "🔴" : "🟢"}</h1>
+        {data.policySummary.totalPassedCount > 0 &&
           <div className='party-pop'>
             <i></i>
             <i></i>
@@ -111,7 +112,7 @@ function App() {
             <ul>
               <li>K8s Schema Version: {data.K8sSchemaVersion}</li>
               {
-                Object.entries(data.EvaluationSummary).map(entry => (
+                Object.entries(data.policySummary).map(entry => (
                   <li>{entry[0].replace(/([A-Z])/g, " $1")}: {entry[1]}</li>
                 ))
               }
@@ -121,7 +122,7 @@ function App() {
             <h2>Summary</h2>
             <ul>
               {
-                Object.entries(data.EvaluationResults.Summary).map(entry => (
+                Object.entries(data.evaluationSummary).map(entry => (
                   <li>{entry[0].replace(/([A-Z])/g, " $1")}: {entry[1]}</li>
                 ))
               }
@@ -133,14 +134,13 @@ function App() {
           &&
           <>
             <h2>Policy Checks</h2>
-            <h4>File :{fileMapper[0]}</h4>
             <div className="policy-errors">
               {
                 policyErrors.map(e => (
-                  <div className="policy-error" title={`View solution for:   ${e[1].Name}`} onClick={() => sendMessage(e[1].FailSuggestion)}>
-                    <p>ID : {e[0]}</p>
-                    <p>Name :{e[1].Name}</p>
-                    <p>Suggestion : {e[1].FailSuggestion}</p>
+                  <div className="policy-error" title={`View solution for:   ${e.name}`} onClick={() => sendMessage(e.messageOnFailure)}>
+                    <p>ID : {e.identifier}</p>
+                    <p>Name :{e.name}</p>
+                    <p>Suggestion : {e.messageOnFailure}</p>
                     <br />
                   </div>
                 ))

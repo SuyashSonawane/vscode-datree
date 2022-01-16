@@ -40,17 +40,17 @@ export const handleYamlCommand = async (
           k8sSchemaVersion
         );
 
-        if (datreeOutput.InvalidYamlFiles) {
-          let yamlErrors = getYamlErrors(datreeOutput.InvalidYamlFiles[0]);
+        if (datreeOutput.yamlValidationResults) {
+          let yamlErrors = getYamlErrors(datreeOutput.yamlValidationResults[0]);
           yamlErrors.forEach((err) => {
             decorateYamlError(err);
           });
           return;
         }
         task.report({ increment: 10 });
-        if (datreeOutput.InvalidK8sFiles) {
+        if (datreeOutput.k8sValidationResults) {
           let k8sErrors = getK8sErrors(
-            datreeOutput.InvalidK8sFiles[0],
+            datreeOutput.k8sValidationResults[0],
             k8sSchemaVersion
           );
           k8sErrors.forEach((err) => {

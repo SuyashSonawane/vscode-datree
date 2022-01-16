@@ -108,7 +108,7 @@ export const getDatreeOutput = (filePath: string, k8sSchemaVersion: string) => {
 
     child.stdout.on("close", () => {
       let temp = Buffer.concat(data).toString();
-      if (policy && temp.includes(policy)) {
+      if (policy && policy !=='default' && temp.includes(policy)) {
         reject(temp.trim());
         return;
       }
@@ -142,17 +142,17 @@ export const getYamlAsFlattenedJSON = (filePath: string) => {
 export const getPolicyErrors = (datreeOutput: any) => {
   const errors: any[] = [];
   let fileData = Object.entries(
-    datreeOutput.EvaluationResults.FileNameRuleMapper
+    datreeOutput.policyValidationResults
   );
   if (fileData.length === 0) {
     return [];
   }
   (fileData as any) = fileData[0];
-  let policyErrors = Object.entries(fileData[1]);
-  policyErrors.forEach((err: any) => {
+  let policyErrors = (Object.entries(fileData[1]) as any)[1];
+  policyErrors[1].forEach((err: any) => {
     errors.push([
-      err[1].FailSuggestion.split("`")[1],
-      err[1].Name + "\n" + err[1].FailSuggestion,
+      err.messageOnFailure.split("`")[1],
+      err.name + "\n" + err.messageOnFailure,
     ]);
   });
   return errors;
@@ -231,7 +231,7 @@ export const generateErrorKeys = (yamlContent: any, errors: any) => {
 };
 
 export const getYamlErrors = (invalidYamlFile: any) => {
-  let validationErrors = invalidYamlFile.ValidationErrors;
+  let validationErrors = invalidYamlFile.errors;
   let errors: { lineNo: number; message: string }[] = [];
   validationErrors.forEach((err: any) => {
     let temp = err.ErrorMessage.split(":");
@@ -268,7 +268,7 @@ export const decorateYamlError = (err: { lineNo: number; message: string }) => {
 };
 
 export const getK8sErrors = (invalidK8sFile: any, k8sSchemaVersion: string) => {
-  let validationErrors = invalidK8sFile.ValidationErrors;
+  let validationErrors = invalidK8sFile.errors;
   let errors: string[] = [];
   validationErrors.forEach((err: any) => {
     errors.push(`K8s schema (${k8sSchemaVersion}) error: ${err.ErrorMessage}`);
