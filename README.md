@@ -9,6 +9,8 @@ Simple VSCode Extension that allows you to run **Datree** tests on Kubernetes co
 
 ![Demo](media/head.gif)
 
+Read the article [VSCode Datree: Datree’s power now in your code editor 💪](https://medium.com/@suyashsonawane/vscode-datree-datrees-power-now-in-your-code-editor-747c9cfee610) to know more about how Datree features are implemented
+
 # Features
 
 - Helm Support
@@ -37,6 +39,7 @@ _Requires helm plugin installed, can be installed from [datree helm plugin](http
 
 ### 0.2.0
 - Support for new improved datree-cli (v0.15.0)
+- Support for .yml files
 ### 0.1.0
 - Windows platform is now supported 💯 
 - Icon update and Holiday theme 🎉

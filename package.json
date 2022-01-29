@@ -13,7 +13,7 @@
     "type": "git",
     "url": "https://github.com/SuyashSonawane/vscode-datree"
   },
-  "version": "0.2.0",
+  "version": "0.2.1",
   "engines": {
     "vscode": "^1.62.0"
   },
