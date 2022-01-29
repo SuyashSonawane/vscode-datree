@@ -30,12 +30,13 @@ export async function activate(context: vscode.ExtensionContext) {
       // convert windows path to posix path
       filePath = filePath.split(path.sep).join(path.posix.sep);
       // only run tests for *.yaml files
-      if (!filePath.includes(".yaml")) {
+      if (!filePath.includes(".yaml") && !filePath.includes(".yml")) {
         vscode.window.showErrorMessage("Not an YAML configuration file");
         return;
       }
       // depending on the filename, execute helm or yaml command
-      if (filePath.split("/").slice(-1)[0] === "Chart.yaml") {
+      let fileName=filePath.split("/").slice(-1)[0]
+      if (fileName === "Chart.yaml" || fileName === "Chart.yml") {
         provider.postMessage({ type: 'fileType', message: 'HELM' });
         provider.postMessage({ type: 'command', message: `helm datree test ${filePath}` });
         await handleHelmCommand(context.extensionPath, filePath);
